@@ -1,0 +1,15 @@
+body {
+    background-color: aliceblue;
+    text-align: center;
+    margin-top: 20%;
+}
+
+.logotype {
+    font-family: 'Itim', cursive;
+    font-size: 75px;
+}
+
+.tagline {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 25px;
+}
