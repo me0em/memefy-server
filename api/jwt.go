@@ -8,7 +8,6 @@ package api
 TODO: refresh tokens system
 
 TODO:
-
  - Who are the consumers of your tokens? Just internal?
  - Is it acceptable to have shared state?
 	Can you put something opaque like a session id in your token and store

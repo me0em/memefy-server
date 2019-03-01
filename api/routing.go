@@ -10,6 +10,7 @@ import (
 )
 
 
+
 // URL schema
 //
 //	POST /user
@@ -17,6 +18,7 @@ import (
 //	GET	 /memes
 //	POST /reaction
 //	GET  /test
+
 
 
 //	POST /api/user
@@ -47,6 +49,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		TestDB()
 	}
 
+	// generate access token and response it
 	respBody := make(map[string]string)
 	respBody["access-token"] = GenerateToken(content.UserID)
 	response, err := json.Marshal(respBody)
@@ -60,13 +63,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 
 //	GET /memes
-func GetMemes(w http.ResponseWriter, r *http.Request) {
+func ThrowMemes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// get arguments
+	// get number of memes which we will return
 	limitstr := r.URL.Query().Get("limit")
 	limit, err := strconv.Atoi(limitstr)
 	if err != nil || limit <= 0 || limit > 10 {
@@ -92,9 +95,7 @@ func HandleReaction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
 		return
 	}
-
-	fmt.Println(r.Body)
-
+	
 	// get POST data
 	decoder := json.NewDecoder(r.Body)
 	var content ReactionContext
