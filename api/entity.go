@@ -3,12 +3,14 @@
 package api
 
 import (
+	"github.com/jinzhu/gorm"
 	"unicode"
 )
 
 // TODO: что хранить на сервере?
 // Чтобы максимально privacy, но максимально полезно
 type User struct {
+	gorm.Model
 	UserID       string			// json: "UserID"
 	IDType       string			// json: "IDType"
 	UserMetadata struct {		// json: "UserMetadata"
@@ -38,4 +40,10 @@ func (user User) isValid() bool {
 	default:
 		return true
 	}
+}
+
+type ReactionContext struct {
+	UserID string
+	MemeID string
+	Reaction string
 }

@@ -6,7 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
+
+
+// URL schema
+//
+//	POST /user
+//	PUT	 /user
+//	GET	 /memes
+//	POST /reaction
+//	GET  /test
 
 
 //	POST /api/user
@@ -30,9 +40,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// register or rewrite user in our database
 	switch r.Method {
 	case http.MethodPost:
-		content.save()
+		//content.save()
+		TestDB()
 	case http.MethodPut:
-		content.save()
+		//content.save()
+		TestDB()
 	}
 
 	respBody := make(map[string]string)
@@ -46,6 +58,66 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
+
+//	GET /memes
+func GetMemes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// get arguments
+	limitstr := r.URL.Query().Get("limit")
+	limit, err := strconv.Atoi(limitstr)
+	if err != nil || limit <= 0 || limit > 10 {
+		http.Error(w, "invalid limit argument", http.StatusMethodNotAllowed)
+		return
+	}
+
+	respBody := make(map[string]string)
+	respBody["limit"] = strconv.Itoa(limit)
+
+	response, err := json.Marshal(respBody)
+	if err != nil {
+		http.Error(w, "sorry, something went wrong", http.StatusMethodNotAllowed)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}
+
+//	POST /reaction
+func HandleReaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	fmt.Println(r.Body)
+
+	// get POST data
+	decoder := json.NewDecoder(r.Body)
+	var content ReactionContext
+	err := decoder.Decode(&content)
+	if err != nil {
+		http.Error(w, "expected another payload", http.StatusBadRequest)
+		return
+	}
+	fmt.Println(content)
+
+
+	respBody := make(map[string]string)
+	respBody["reaction"] = content.Reaction
+
+	response, err := json.Marshal(respBody)
+	if err != nil {
+		http.Error(w, "sorry, something went wrong", http.StatusMethodNotAllowed)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+
+}
 
 //	GET /test
 func TestThings(w http.ResponseWriter, r *http.Request) {
@@ -64,16 +136,9 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 	respData["userID"] = userID
 	respData["Expired_time"] = fmt.Sprint(expiredTime)
 
+	TestDB()
+
 	respJson, _ := json.Marshal(respData)
 	w.WriteHeader(http.StatusOK)
 	w.Write(respJson)
 }
-
-//	POST like (reaction)
-//func Reaction(w http.ResponseWriter, r *http.Request) {
-//	fmt.Println("тут записывает реакцию на мем в БД")
-//}
-
-//	GET memes (default limit=10)
-
-
