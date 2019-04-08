@@ -47,7 +47,7 @@ func GenerateToken(username string) string {
 	return tokenString
 }
 
-func Authorization(w http.ResponseWriter, r *http.Request) (string, float64, error) {
+func Authorization(_ http.ResponseWriter, r *http.Request) (string, float64, error) {
 	// Parse token in request header
 	auth := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 

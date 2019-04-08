@@ -9,20 +9,10 @@ import (
 	"strconv"
 )
 
-
-
-// URL schema
-//
-//	POST /user
-//	PUT	 /user
-//	GET	 /memes
-//	POST /reaction
-//	GET  /test
-
-
-
+////////////////////
 //	POST /api/user
 //	PUT  /api/user
+////////////////////
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost && r.Method != http.MethodPut {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
@@ -31,10 +21,10 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// get POST data
 	decoder := json.NewDecoder(r.Body)
-	content := &User{}
-	err := decoder.Decode(&content)
-	if err != nil || !content.isValid() {
-		http.Error(w, "expected another payload", http.StatusBadRequest)
+	userInfo := &User{}
+	err := decoder.Decode(&userInfo)
+	if err != nil || !userInfo.isValid() {
+		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
 
@@ -42,54 +32,63 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// register or rewrite user in our database
 	switch r.Method {
 	case http.MethodPost:
-		//content.save()
-		TestDB()
+		// TODO: подрубить DB
 	case http.MethodPut:
-		//content.save()
-		TestDB()
+		// TODO: подрубить DB
 	}
 
 	// generate access token and response it
-	respBody := make(map[string]string)
-	respBody["access-token"] = GenerateToken(content.UserID)
-	response, err := json.Marshal(respBody)
+	respPayload := make(map[string]string)
+	respPayload["access-token"] = GenerateToken(userInfo.UserID)
+	response, err := json.Marshal(respPayload)
 	if err != nil {
-		http.Error(w, "sorry, something went wrong", http.StatusMethodNotAllowed)
+		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	if wtf, err := w.Write(response); err != nil {
+		// TODO: logging
+		fmt.Printf("%v", wtf)
+		panic(err)
+	}
 }
 
 
-//	GET /memes
+////////////////////
+//	GET api/memes
+////////////////////
 func ThrowMemes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// get number of memes which we will return
-	limitstr := r.URL.Query().Get("limit")
-	limit, err := strconv.Atoi(limitstr)
+	// parse number of memes which will be returned
+	parsedLimit := r.URL.Query().Get("limit")
+	limit, err := strconv.Atoi(parsedLimit)
 	if err != nil || limit <= 0 || limit > 10 {
-		http.Error(w, "invalid limit argument", http.StatusMethodNotAllowed)
+		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
 
-	respBody := make(map[string]string)
-	respBody["limit"] = strconv.Itoa(limit)
-
-	response, err := json.Marshal(respBody)
+	respPayload := make(map[string]string)
+	respPayload["limit"] = strconv.Itoa(limit)
+	response, err := json.Marshal(respPayload)
 	if err != nil {
-		http.Error(w, "sorry, something went wrong", http.StatusMethodNotAllowed)
+		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	if wtf, err := w.Write(response); err != nil {
+		// TODO: logging
+		fmt.Printf("%v", wtf)
+		panic(err)
+	}
 }
 
-//	POST /reaction
+////////////////////
+//	POST api/reaction
+////////////////////
 func HandleReaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
@@ -101,26 +100,29 @@ func HandleReaction(w http.ResponseWriter, r *http.Request) {
 	var content ReactionContext
 	err := decoder.Decode(&content)
 	if err != nil {
-		http.Error(w, "expected another payload", http.StatusBadRequest)
+		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
-	fmt.Println(content)
 
-
-	respBody := make(map[string]string)
-	respBody["reaction"] = content.Reaction
-
-	response, err := json.Marshal(respBody)
+	respPayload := make(map[string]string)
+	respPayload["reaction"] = content.Reaction
+	response, err := json.Marshal(respPayload)
 	if err != nil {
-		http.Error(w, "sorry, something went wrong", http.StatusMethodNotAllowed)
+		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	if wtf, err := w.Write(response); err != nil {
+		// TODO: logging
+		fmt.Printf("%v", wtf)
+		panic(err)
+	}
 
 }
 
-//	GET /test
+////////////////////
+//	GET api/test
+////////////////////
 func TestThings(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
@@ -133,13 +135,15 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respData := make(map[string]string)
-	respData["userID"] = userID
-	respData["Expired_time"] = fmt.Sprint(expiredTime)
+	respPayload := make(map[string]string)
+	respPayload["userID"] = userID
+	respPayload["Expired_time"] = fmt.Sprint(expiredTime)
 
-	TestDB()
-
-	respJson, _ := json.Marshal(respData)
+	response, _ := json.Marshal(respPayload)
 	w.WriteHeader(http.StatusOK)
-	w.Write(respJson)
+	if wtf, err := w.Write(response); err != nil {
+		// TODO: logging
+		fmt.Printf("%v", wtf)
+		panic(err)
+	}
 }

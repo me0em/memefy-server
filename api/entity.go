@@ -3,23 +3,22 @@
 package api
 
 import (
-	"github.com/jinzhu/gorm"
+	"time"
 	"unicode"
 )
 
-// TODO: что хранить на сервере?
-// Чтобы максимально privacy, но максимально полезно
 type User struct {
-	gorm.Model
-	UserID       string			// json: "UserID"
-	IDType       string			// json: "IDType"
-	UserMetadata struct {		// json: "UserMetadata"
-		Device         string   // json: "Device"
-		Model          string	// json: "Model"
-		IPv4           string	// json: "IPv4"
-		DeviceLanguage string	// json: "DeviceLanguage"
+	UserID string 			 `db:"user_id" json:"user_id"`
+	IDType string 			 `db:"id_type" json:"id_type"`
+	UserMetadata struct {
+		Timestamp  time.Time `db:"timestamp" json:"timestamp"`
+		Device     string    `db:"device" json:"device"`
+		Model      string    `db:"model" json:"model"`
+		DeviceLang string    `db:"device_language" json:"device_language"`
+		IPv4       string    `db:"IPv6" json:"IPv6"`
 	}
 }
+
 
 // TODO: UserID that does not exist yet
 // This method allow you to check the fields of
