@@ -64,29 +64,30 @@ func ThrowMemes(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
 		return
 	}
-	//decoder := json.NewDecoder(r.Body)
 	// parse number of memes which will be returned
 	parsedLimit := r.URL.Query().Get("limit")
-	userID, _, err := Authorization(w, r)
+	userID, _, err := Authorization(w, r) //получаю айди(логин) юзера
 	if err != nil{
 		fmt.Println(err)
 	}
-	CountMeme, err := strconv.Atoi(parsedLimit)
+	CountMeme, err := strconv.Atoi(parsedLimit)//количество мемов которое необходимо
 	if err != nil || CountMeme <= 0 || CountMeme > 100 {
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		fmt.Println(err)
 		return
 	}
 
-	formodel := &GigeMeme{User: userID, Count: CountMeme}
-	formodeljson, err := json.Marshal(formodel)
+	formodel := &GiveMeme{User: userID, Count: CountMeme}
+	formodeljson, err := json.Marshal(formodel)//формирую джесон для модели
 	if err != nil {
 		fmt.Println(err)
-
 	}
 
 	formodeljsonbit := bytes.NewReader(formodeljson)
-	resp, err := http.Post("http://localhost:8228/model", "application/json", formodeljsonbit)
+	resp, err := http.Post("http://localhost:8228/model", "application/json", formodeljsonbit) //отправляю в модель
+	//TODO отправлять в бота ошибки
+	//TODO модель присылает в ответ джесон такой с таким джесоном { "error_msg": "Username not converted to user_id", "user_id": "3" }, надо обрабатывать
+
 	if err != nil {
 		//fmt.Println(err)
 		//var error = Error{Where:"ThrowMemes", What:"convert to json"}
@@ -95,18 +96,15 @@ func ThrowMemes(w http.ResponseWriter, r *http.Request) {
 		//_, err := http.Get(" http://127.0.0.1:5000/error")
 		//defer respe.Body.Close()
 		fmt.Println(err)
-
-
 	}
-	meme, err := ioutil.ReadAll(resp.Body)
+	meme, err := ioutil.ReadAll(resp.Body) //обрабатываю полученные даныне, получаю что нужно
 	if err != nil {
-
 		fmt.Println(err)
-
 
 	}
 
 	w.WriteHeader(http.StatusOK)
+
 	if wtf, err := w.Write(meme); err != nil {
 		// TODO: logging
 		fmt.Printf("%v", wtf)

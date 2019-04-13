@@ -46,8 +46,8 @@ type ReactionContext struct {
 	MemeID string
 	Reaction string
 }
-
-type GigeMeme struct {
+//для модели
+type GiveMeme struct {
 	User string		`json:"user_id"`
 	Count int		`json:"count_meme"`
 }
