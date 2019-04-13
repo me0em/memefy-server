@@ -3,8 +3,10 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -29,7 +31,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: think about PUT method and rewrite it
-	// register or rewrite user in our database
+	// register or rewrite usera in our database
 	switch r.Method {
 	case http.MethodPost:
 		// TODO: подрубить DB
@@ -62,24 +64,50 @@ func ThrowMemes(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
 		return
 	}
-
+	//decoder := json.NewDecoder(r.Body)
 	// parse number of memes which will be returned
 	parsedLimit := r.URL.Query().Get("limit")
-	limit, err := strconv.Atoi(parsedLimit)
-	if err != nil || limit <= 0 || limit > 10 {
+	userID, _, err := Authorization(w, r)
+	if err != nil{
+		fmt.Println(err)
+	}
+	CountMeme, err := strconv.Atoi(parsedLimit)
+	if err != nil || CountMeme <= 0 || CountMeme > 100 {
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
+		fmt.Println(err)
 		return
 	}
 
-	respPayload := make(map[string]string)
-	respPayload["limit"] = strconv.Itoa(limit)
-	response, err := json.Marshal(respPayload)
+	formodel := &GigeMeme{User: userID, Count: CountMeme}
+	formodeljson, err := json.Marshal(formodel)
 	if err != nil {
-		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
+		fmt.Println(err)
+
+	}
+
+	formodeljsonbit := bytes.NewReader(formodeljson)
+	resp, err := http.Post("http://localhost:8228/model", "application/json", formodeljsonbit)
+	if err != nil {
+		//fmt.Println(err)
+		//var error = Error{Where:"ThrowMemes", What:"convert to json"}
+		//b1, _ := json.Marshal(error)
+		//error1 := bytes.NewReader(b1)
+		//_, err := http.Get(" http://127.0.0.1:5000/error")
+		//defer respe.Body.Close()
+		fmt.Println(err)
+
+
+	}
+	meme, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+
+		fmt.Println(err)
+
+
 	}
 
 	w.WriteHeader(http.StatusOK)
-	if wtf, err := w.Write(response); err != nil {
+	if wtf, err := w.Write(meme); err != nil {
 		// TODO: logging
 		fmt.Printf("%v", wtf)
 		panic(err)

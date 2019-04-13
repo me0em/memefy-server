@@ -46,3 +46,14 @@ type ReactionContext struct {
 	MemeID string
 	Reaction string
 }
+
+type GigeMeme struct {
+	User string		`json:"user_id"`
+	Count int		`json:"count_meme"`
+}
+
+type Error struct {
+	Where string	`json:"where"`
+	What string		`json:"what"`
+}
+
