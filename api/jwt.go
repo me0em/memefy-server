@@ -2,7 +2,6 @@
 // database abstraction, url routing and some jwt layer functions
 package api
 
-
 /*
 
 TODO: refresh tokens system
@@ -17,20 +16,20 @@ TODO:
 	What could happen if one fell into the wrong hands?
 */
 
-
-
-
 import (
 	"errors"
-	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
+// SecretKey needs for sign a token
+// TODO: hide this shit
 const SecretKey = "wer6YTIFpojneEfe34fr4go8ukcyyjr45y8867"
 
-
+// GenerateToken allows to generate tokens (wow really?)
 func GenerateToken(username string) string {
 	// Create JWT token
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
@@ -47,6 +46,8 @@ func GenerateToken(username string) string {
 	return tokenString
 }
 
+// Authorization checks a token for validation
+// TODO: expired time
 func Authorization(_ http.ResponseWriter, r *http.Request) (string, float64, error) {
 	// Parse token in request header
 	auth := strings.SplitN(r.Header.Get("Authorization"), " ", 2)

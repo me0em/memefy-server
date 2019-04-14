@@ -1,15 +1,32 @@
-// Package db represents databases abstractions
+// Package api represents REST API and implements
+// database abstraction, url routing and some jwt layer functions
 package api
 
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
+var db *sql.DB
 
-// Function returns
-// array with all of users from database
+// InitDB initialize the database
+func InitDB(dataSourceName string) {
+	var err error
+	db, err = sql.Open("mysql", dataSourceName)
+	if err != nil {
+		log.Panic(err)
+	}
+	if err = db.Ping(); err != nil {
+		log.Panic(err)
+	}
+	fmt.Println("Success!")
+}
+
+// GetAllUsers returns array with all users from database
 func GetAllUsers(db *sql.DB) ([]User, error) {
 	user := User{}
 	users := []User{}
@@ -22,6 +39,7 @@ func GetAllUsers(db *sql.DB) ([]User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
+		// TODO: db binding: if err = rows.Scan(&user); err != nil {...}
 		err = rows.Scan(&user.UserID, &user.IDType, &user.UserMetadata.Timestamp, &user.UserMetadata.Device, &user.UserMetadata.Model, &user.UserMetadata.DeviceLang, &user.UserMetadata.IPv4)
 		if err != nil {
 			err = errors.New("failed to load DB data to struct")
@@ -38,49 +56,35 @@ func GetAllUsers(db *sql.DB) ([]User, error) {
 	return users, err
 }
 
-
-// Function returns
-// user if he exists
+// GetUserByID returns user if he exists
 func GetUserByID(db *sql.DB, userID string) (User, error) {
 	user := User{}
 	err := db.QueryRow("SELECT * FROM user WHERE user_id = ?", userID).
-		Scan(&user.UserID, &user.IDType,  &user.UserMetadata.Timestamp, &user.UserMetadata.Device, &user.UserMetadata.Model, &user.UserMetadata.DeviceLang, &user.UserMetadata.IPv4)
+		Scan(&user.UserID, &user.IDType, &user.UserMetadata.Timestamp, &user.UserMetadata.Device, &user.UserMetadata.Model, &user.UserMetadata.DeviceLang, &user.UserMetadata.IPv4)
 	if err != nil {
 		//err = errors.New("failed to make a DB query")
 		return user, err
 	}
+
 	return user, err
 }
 
-
-// Function returns error
-// Insert a user to the database
+// InsertUser register a user in the database
 func InsertUser(db *sql.DB, user User) error {
 	stmt, err := db.Prepare("INSERT INTO memefy.user " +
 		"VALUES(?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
-	res, err := stmt.Exec(user.UserID, user.IDType, user.UserMetadata.Timestamp, user.UserMetadata.Device, user.UserMetadata.Model, user.UserMetadata.DeviceLang, user.UserMetadata.IPv4)
+	_, err = stmt.Exec(user.UserID, user.IDType, user.UserMetadata.Timestamp, user.UserMetadata.Device, user.UserMetadata.Model, user.UserMetadata.DeviceLang, user.UserMetadata.IPv4)
 	if err != nil {
 		log.Fatal(err)
 	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rowCnt, err := res.RowsAffected()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("ID = %d, affected = %d\n", lastId, rowCnt)
 	_ = stmt.Close()
 	return err
 }
 
-
-// Function returns error
-// Change some data in the user entity
+// PatchUserData updates user data in the database
 func PatchUserData(db *sql.DB, userID, column, value string) error {
 	var err error
 	var ex *sql.Stmt
@@ -102,17 +106,14 @@ func PatchUserData(db *sql.DB, userID, column, value string) error {
 		return err
 	}
 
-	_, err = ex.Exec(value, userID)
-	if err != nil {
+	if _, err = ex.Exec(value, userID); err != nil {
 		err := errors.New("failed to make a DB query")
 		return err
 	}
 	return nil
 }
 
-
-// Function returns error
-// Delete User from the database
+// DeleteUser delete a user from the database
 func DeleteUser(db *sql.DB, userID string) error {
 	var err error
 	var ex *sql.Stmt
@@ -125,4 +126,3 @@ func DeleteUser(db *sql.DB, userID string) error {
 	}
 	return nil
 }
-
