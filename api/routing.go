@@ -25,6 +25,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	userData := &User{}
 	err := decoder.Decode(&userData)
 	if err != nil || !userData.isValid() {
+		ErrorsForTelegramBot(err, "CreateUser")
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
@@ -34,6 +35,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		// register user in database
 		err = InsertUser(db, *userData)
 		if err != nil {
+			ErrorsForTelegramBot(err, "CreateUser")
 			http.Error(w, "database error", http.StatusBadRequest)
 			return
 		}
@@ -43,6 +45,11 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		var column, value string
 		err = PatchUserData(db, userData.UserID, column, value)
 		// TODO: дописать
+		if err != nil {
+			ErrorsForTelegramBot(err, "CreateUser")
+			return
+		}
+
 	}
 
 	// generate access token and response it
@@ -50,12 +57,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	respPayload["access-token"] = GenerateToken(userData.UserID)
 	response, err := json.Marshal(respPayload)
 	if err != nil {
+		ErrorsForTelegramBot(err, "CreateUser")
 		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if wtf, err := w.Write(response); err != nil {
 		// TODO: logging
+		ErrorsForTelegramBot(err, "CreateUser")
 		fmt.Printf("%v", wtf)
 		panic(err)
 	}
@@ -75,6 +84,7 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	// TODO: usually http.response with custom error text if it possible,
 	// if it not - just send http.response (everywhere)
 	if err != nil {
+		ErrorsForTelegramBot(err, "SendMemes")
 		http.Error(w, "authorization failed", http.StatusUnauthorized)
 		return
 	}
@@ -83,6 +93,7 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	limit := r.URL.Query().Get("limit")
 	amount, err := strconv.Atoi(limit)
 	if err != nil || amount < 1 || amount > 10 {
+		ErrorsForTelegramBot(err, "SendMemes")
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
@@ -93,22 +104,26 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	transportStorage := &MemesTransport{UserID: userID, Amount: amount}
 	jsonForModel, err := json.Marshal(transportStorage)
 	if err != nil {
+		ErrorsForTelegramBot(err, "SendMemes")
 		fmt.Println(err)
 	}
 	jsonForModelBit := bytes.NewReader(jsonForModel)
 	// TODO: config package with urls etc
 	resp, err := http.Post("http://localhost:8228/model", "application/json", jsonForModelBit) //отправляю в модель
 	if err != nil {
+		ErrorsForTelegramBot(err, "SendMemes")
 		fmt.Println(err)
 	}
 
 	memes, err := ioutil.ReadAll(resp.Body) //обрабатываю полученные даныне, получаю что нужно
 	if err != nil {
+		ErrorsForTelegramBot(err, "SendMemes")
 		fmt.Println(err)
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(memes); err != nil {
+		ErrorsForTelegramBot(err, "SendMemes")
 		panic(err)
 	}
 
@@ -133,6 +148,7 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 // and make them love each other in one database table
 // POST /api/reaction
 func GetReaction(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
 		return
@@ -143,6 +159,7 @@ func GetReaction(w http.ResponseWriter, r *http.Request) {
 	var content ReactionContext
 	err := decoder.Decode(&content)
 	if err != nil {
+		ErrorsForTelegramBot(err, "GetReaction")
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
@@ -151,12 +168,14 @@ func GetReaction(w http.ResponseWriter, r *http.Request) {
 	respPayload["reaction"] = content.Reaction
 	response, err := json.Marshal(respPayload)
 	if err != nil {
+
 		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if wtf, err := w.Write(response); err != nil {
 		// TODO: logging
+		ErrorsForTelegramBot(err, "GetReaction")
 		fmt.Printf("%v", wtf)
 		panic(err)
 	}
@@ -173,6 +192,7 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 
 	userID, expiredTime, err := Authorization(w, r)
 	if err != nil {
+		ErrorsForTelegramBot(err, "TestThings")
 		http.Error(w, "authorization failed", http.StatusUnauthorized)
 		return
 	}
@@ -186,6 +206,22 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 	if wtf, err := w.Write(response); err != nil {
 		// TODO: logging
 		fmt.Printf("%v", wtf)
+		ErrorsForTelegramBot(err, "TestThings")
 		panic(err)
 	}
+}
+
+func ErrorsForTelegramBot(error error, where string, )  {
+	errorr := &ErrorForTelegram{Error:error, Where:where}
+	jsonForModel, err := json.Marshal(errorr)
+	if err != nil {
+		fmt.Println(err)
+	}
+	jsonForModelBit := bytes.NewReader(jsonForModel)
+	re, err := http.Post("http://127.0.0.1:5000/", "application/json", jsonForModelBit) //отправляю в модель
+	fmt.Println(re)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 }

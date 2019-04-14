@@ -51,5 +51,11 @@ type ReactionContext struct {
 // MemesTransport is a struct for request to ML model
 type MemesTransport struct {
 	UserID string `json:"user_id"`
-	Amount int    `json:"amount"`
+	Amount int    `json:"count_meme"`
+}
+
+type ErrorForTelegram struct {
+	Error error	`json:"error"`
+	Where string	`json:"where"`
+
 }
