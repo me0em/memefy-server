@@ -25,12 +25,12 @@ type User struct {
 // User structure for correctness.
 func (user User) isValid() bool {
 	for _, char := range user.UserID {
-		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && (char < 0 || char > 9) && char != '_' {
+		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && (char < 0 || char > 9) && char != '_' && char != '@' && char != '.' && char != '-' && char != ':' && char != ' ' {
 			return false
 		}
 	}
 	switch {
-	case len(user.UserID) > 15 || len(user.UserID) < 5:
+	case len(user.UserID) > 30 || len(user.UserID) < 5:
 		return false
 	case unicode.IsDigit([]rune(user.UserID)[0]):
 		return false

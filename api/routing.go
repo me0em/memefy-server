@@ -23,20 +23,26 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// get POST data
 	decoder := json.NewDecoder(r.Body)
 	userData := &User{}
+	//fmt.Println(userData)
 	err := decoder.Decode(&userData)
+
 	if err != nil || !userData.isValid() {
-		ErrorsForTelegramBot(err, "CreateUser")
+	//if err != nil {
+		ErrorsForTelegramBot(err, "CreateUser1")
+		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		panic(err)
-		//http.Error(w, "another payload was expected", http.StatusBadRequest)
+
 		return
 	}
 
 	switch r.Method {
 	case http.MethodPost:
 		// register user in database
+
 		err = InsertUser(db, *userData)
+
 		if err != nil {
-			ErrorsForTelegramBot(err, "CreateUser")
+			ErrorsForTelegramBot(err, "CreateUser2")
 			http.Error(w, "database error", http.StatusBadRequest)
 			return
 		}
@@ -47,7 +53,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		err = PatchUserData(db, userData.UserID, column, value)
 		// TODO: дописать
 		if err != nil {
-			ErrorsForTelegramBot(err, "CreateUser")
+			ErrorsForTelegramBot(err, "CreateUser3")
 			return
 		}
 
@@ -58,14 +64,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	respPayload["access-token"] = GenerateToken(userData.UserID)
 	response, err := json.Marshal(respPayload)
 	if err != nil {
-		ErrorsForTelegramBot(err, "CreateUser")
+		ErrorsForTelegramBot(err, "CreateUser4")
 		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if wtf, err := w.Write(response); err != nil {
 		// TODO: logging
-		ErrorsForTelegramBot(err, "CreateUser")
+		ErrorsForTelegramBot(err, "CreateUser5")
 		fmt.Printf("%v", wtf)
 		panic(err)
 	}
@@ -215,16 +221,17 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 }
 
 func ErrorsForTelegramBot(error error, where string, )  {
-	errorr := &ErrorForTelegram{Error:error, Where:where}
-	jsonForModel, err := json.Marshal(errorr)
-	if err != nil {
-		fmt.Println(err)
-	}
-	jsonForModelBit := bytes.NewReader(jsonForModel)
-	re, err := http.Post("http://127.0.0.1:5000/", "application/json", jsonForModelBit) //отправляю в модель
-	fmt.Println(re)
-	if err != nil {
-		fmt.Println(err)
-	}
+	//errorr := &ErrorForTelegram{Error:error, Where:where}
+	//jsonForModel, err := json.Marshal(errorr)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//jsonForModelBit := bytes.NewReader(jsonForModel)
+	//re, err := http.Post("http://127.0.0.1:5000/", "application/json", jsonForModelBit) //отправляю в модель
+	//fmt.Println(re)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	fmt.Println(error, where)
 
 }

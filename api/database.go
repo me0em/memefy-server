@@ -13,6 +13,14 @@ import (
 
 var db *sql.DB
 
+var CreateTableMemes = "CREATE TABLE memefy.memes (meme_id  Int64, img_url String, meme_text  String, timestamp DATE," +
+	" lang String ) ENGINE = MergeTree(timestamp, (meme_id),8192)"
+var CreateTableUser = "CREATE TABLE user (user_id String, id_type String, timestamp Date, devisce String, model String," +
+	"device_language String,IPv4 String ) ENGINE = MergeTree(timestamp, (user_id),8192)"
+var CreateTableReaction = "CREATE TABLE reactions (meme_id  Int64, user_id String, meme_text String, " +
+	"					timestamp DATE ) ENGINE = MergeTree(timestamp, (user_id),8192)"
+
+
 // InitDB initialize the database
 func InitDB(dataSourceName string) {
 	var err error
