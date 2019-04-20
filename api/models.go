@@ -43,9 +43,10 @@ func (user User) isValid() bool {
 
 // ReactionContext and me doesn't give a fuck why it's necessary
 type ReactionContext struct {
-	UserID   string
-	MemeID   string
-	Reaction string
+	UserID   string		`json:"user_id"`
+	MemeID   int		`json:"meme_id"`
+	Reaction int		`json:"reaction"`
+	//Timestamp string	`json:"timestamp"`
 }
 
 // MemesTransport is a struct for request to ML model
@@ -55,7 +56,7 @@ type MemesTransport struct {
 }
 
 type ErrorForTelegram struct {
-	Error error	`json:"error"`
+	Error error		`json:"error"`
 	Where string	`json:"where"`
 
 }

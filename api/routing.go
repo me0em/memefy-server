@@ -26,7 +26,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userData)
 	if err != nil || !userData.isValid() {
 		ErrorsForTelegramBot(err, "CreateUser")
-		http.Error(w, "another payload was expected", http.StatusBadRequest)
+		panic(err)
+		//http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
 
@@ -134,12 +135,12 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	// 	http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
 	// }
 
-	// w.WriteHeader(http.StatusOK)
-	// if wtf, err := w.Write(response); err != nil {
-	// 	// TODO: logging
-	// 	fmt.Printf("%v", wtf)
-	// 	panic(err)
-	// }
+	//w.WriteHeader(http.StatusOK)
+	//if wtf, err := w.Write(response); err != nil {
+	//	// TODO: logging
+	//	fmt.Printf("%v", wtf)
+	//	panic(err)
+	//}
 }
 
 // TODO: sql-query to save reaction in databasedatabase
@@ -164,21 +165,23 @@ func GetReaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respPayload := make(map[string]string)
-	respPayload["reaction"] = content.Reaction
-	response, err := json.Marshal(respPayload)
+	userID, _, err := Authorization(w, r)
+	content.UserID = userID
+	//TODO закидывать время
+	//content.Timestamp = time.Now()
+	err = SaveReaction(db, content)
 	if err != nil {
-
-		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if wtf, err := w.Write(response); err != nil {
-		// TODO: logging
 		ErrorsForTelegramBot(err, "GetReaction")
-		fmt.Printf("%v", wtf)
-		panic(err)
+		//http.Error(w, "another payload was expected", http.StatusBadRequest)
+		return
 	}
+	//w.WriteHeader(http.StatusOK)
+	//if wtf, err := w.Write(response); err != nil {
+	//	// TODO: logging
+	//	ErrorsForTelegramBot(err, "GetReaction")
+	//	fmt.Printf("%v", wtf)
+	//	panic(err)
+	//}
 
 }
 

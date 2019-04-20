@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mailru/go-clickhouse"
 )
 
 var db *sql.DB
@@ -16,11 +16,12 @@ var db *sql.DB
 // InitDB initialize the database
 func InitDB(dataSourceName string) {
 	var err error
-	db, err = sql.Open("mysql", dataSourceName)
+	db, err = sql.Open("clickhouse", dataSourceName)
 	if err != nil {
 		log.Panic(err)
 	}
 	if err = db.Ping(); err != nil {
+		fmt.Println(err)
 		log.Panic(err)
 	}
 	fmt.Println("Success!")
@@ -125,4 +126,18 @@ func DeleteUser(db *sql.DB, userID string) error {
 		return err
 	}
 	return nil
+}
+
+func SaveReaction(db *sql.DB, reactions ReactionContext) error  {
+	stmt, err := db.Prepare("INSERT INTO memefy.reactions " +
+		"VALUES(?, ?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = stmt.Exec(reactions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = stmt.Close()
+	return err
 }
