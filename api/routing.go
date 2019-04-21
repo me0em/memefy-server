@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"memefy-server/config"
 	"net/http"
 	"strconv"
 )
@@ -81,7 +82,6 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	userID, _, err := Authorization(w, r)
 	// TODO: usually http.response with custom error text if it possible,
 	// if it not - just send http.response (everywhere)
@@ -109,7 +109,7 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonForModelBit := bytes.NewReader(jsonForModel)
 	// TODO: config package with urls etc
-	resp, err := http.Post("http://localhost:8228/hero", "application/json", jsonForModelBit) //отправляю в модель
+	resp, err := http.Post(config.MLModelHost+"/hero", "application/json", jsonForModelBit) //отправляю в модель
 	if err != nil {
 		ErrorsForTelegramBot(err, "<SendMemes>: Error while sending data to ML model")
 		fmt.Println(err)
@@ -125,19 +125,19 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	}
 	var arrtext = make([]string, 0, amount)
 	var arrhash = make([]string, 0, amount)
-	for i := 0; i <  len(memes.Memes); i++{
+	for i := 0; i < len(memes.Memes); i++ {
 		var text, hash string = GetMemeText(db, memes.Memes[i])
-		arrtext =  append(arrtext, text)
+		arrtext = append(arrtext, text)
 		arrhash = append(arrhash, hash)
 	}
 	memesForUser := &ResponseMemes{}
 	memesForUser.Memes = arrhash
 	memesForUser.Text = arrtext
 	jsonForUser, err := json.Marshal(memesForUser)
-//=======
-//
-//	memes, err := ioutil.ReadAll(resp.Body) // do response data, get what we want to
-//>>>>>>> 5eabfd51c43ebaf76efaf4896248948aa180c65a
+	//=======
+	//
+	//	memes, err := ioutil.ReadAll(resp.Body) // do response data, get what we want to
+	//>>>>>>> 5eabfd51c43ebaf76efaf4896248948aa180c65a
 	if err != nil {
 		ErrorsForTelegramBot(err, "<SendMemes>: Error while reciving data from ML model")
 		fmt.Println(err)
@@ -238,7 +238,7 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 }
 
 // ErrorsForTelegramBot sends error msg to Error Telegram Bot
-	// ErrorsForTelegramBot sends error msg to Error Telegram Bot
+// ErrorsForTelegramBot sends error msg to Error Telegram Bot
 func ErrorsForTelegramBot(error error, where string) {
 
 	errorr := &ErrorForTelegram{Error: error, Where: where}
@@ -247,7 +247,7 @@ func ErrorsForTelegramBot(error error, where string) {
 		fmt.Println(err)
 	}
 	jsonForModelBit := bytes.NewReader(jsonForModel)
-	re, err := http.Post("http://127.0.0.1:5000/", "application/json", jsonForModelBit) //отправляю в модель
+	re, err := http.Post(config.MLModelHost, "application/json", jsonForModelBit) //отправляю в модель
 	fmt.Println(re)
 	if err != nil {
 		fmt.Println(err)

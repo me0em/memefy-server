@@ -12,6 +12,7 @@ import (
 )
 
 var db *sql.DB
+
 //
 //var CreateTableMemes = "CREATE TABLE memefy.memes (meme_id  Int64, img_url String, meme_text  String, timestamp DATE," +
 //	" lang String ) ENGINE = MergeTree(timestamp, (meme_id),8192)"
@@ -150,15 +151,14 @@ func SaveReaction(db *sql.DB, reactions ReactionContext) error {
 	return err
 }
 
-
+// GetMemeText is  a function for getting meme text
 func GetMemeText(db *sql.DB, MemeID int) (string, string) {
 	//TODO: сделать запрос и хеш функцию, возвращать как text, hash
 	memes := &MemeWithText{}
-	err := db.QueryRow("SELECT meme_text, meme_hash FROM memefy.memes WHERE meme_id = ?", MemeID).Scan( &memes.Text, &memes.Hash)
-	if err != nil{
+	err := db.QueryRow("SELECT meme_text, meme_hash FROM memefy.memes WHERE meme_id = ?", MemeID).Scan(&memes.Text, &memes.Hash)
+	if err != nil {
 		ErrorsForTelegramBot(err, "GetMemeText")
 		fmt.Println(err)
 	}
 	return memes.Text, memes.Hash
 }
-

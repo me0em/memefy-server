@@ -18,16 +18,13 @@ TODO:
 
 import (
 	"errors"
+	"memefy-server/config"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
-
-// SecretKey needs for sign a token
-// TODO: hide this shit
-const SecretKey = "wer6YTIFpojneEfe34fr4go8ukcyyjr45y8867"
 
 // GenerateToken allows to generate tokens (wow really?)
 func GenerateToken(username string) string {
@@ -38,7 +35,7 @@ func GenerateToken(username string) string {
 	// Expire in 3 days
 	claims.ExpiresAt = time.Now().Add(time.Hour * 72).Unix()
 	token.Claims = claims
-	tokenString, err := token.SignedString([]byte(SecretKey))
+	tokenString, err := token.SignedString([]byte(config.SecretKey))
 	if err != nil {
 		panic(err)
 	}
@@ -57,7 +54,7 @@ func Authorization(w http.ResponseWriter, r *http.Request) (string, float64, err
 	}
 
 	token, _ := jwt.Parse(auth[1], func(token *jwt.Token) (interface{}, error) {
-		return []byte(SecretKey), nil
+		return []byte(config.SecretKey), nil
 	})
 
 	claims, ok := token.Claims.(jwt.MapClaims)
