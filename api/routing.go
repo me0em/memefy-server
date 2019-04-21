@@ -35,9 +35,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		// register user in database
+		_, err := GetUserByID(db, userData.UserID)
+		if err == nil {
+			ErrorsForTelegramBot(err, "userID already exists")
+			http.Error(w, "another payload was expected", http.StatusBadRequest)
+			return
+		}
 
 		err = InsertUser(db, *userData)
-
 		if err != nil {
 			ErrorsForTelegramBot(err, "CreateUser2")
 			http.Error(w, "database error", http.StatusBadRequest)
