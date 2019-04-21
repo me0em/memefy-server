@@ -27,11 +27,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userData)
 
 	if err != nil || !userData.isValid() {
-	//if err != nil {
 		ErrorsForTelegramBot(err, "CreateUser1")
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
-		panic(err)
-
 		return
 	}
 
@@ -62,6 +59,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// generate access token and response it
 	respPayload := make(map[string]string)
 	respPayload["access-token"] = GenerateToken(userData.UserID)
+	respPayload["refresh-token"] = GenerateToken(userData.UserID + "-refresh")
 	response, err := json.Marshal(respPayload)
 	if err != nil {
 		ErrorsForTelegramBot(err, "CreateUser4")
@@ -69,10 +67,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	if wtf, err := w.Write(response); err != nil {
-		// TODO: logging
+	if _, err := w.Write(response); err != nil {
 		ErrorsForTelegramBot(err, "CreateUser5")
-		fmt.Printf("%v", wtf)
 		panic(err)
 	}
 }
@@ -191,6 +187,36 @@ func GetReaction(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// RefreshToken allows to refresh token
+func RefreshToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "invalid API method", http.StatusMethodNotAllowed)
+		return
+	}
+	userID, err := CheckRefreshToken(w, r)
+	if err != nil {
+		ErrorsForTelegramBot(err, "TestThings")
+		http.Error(w, "authorization failed", http.StatusUnauthorized)
+		return
+	}
+
+	respPayload := make(map[string]string)
+	respPayload["access-token"] = GenerateToken(userID)
+	response, err := json.Marshal(respPayload)
+	if err != nil {
+		ErrorsForTelegramBot(err, "CreateUser4")
+		http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		// TODO: logging
+		ErrorsForTelegramBot(err, "CreateUser5")
+		panic(err)
+	}
+
+}
+
 // TestThings represents useless shit which is will be
 // removed as soon as possible
 func TestThings(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +246,7 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ErrorsForTelegramBot(error error, where string, )  {
+func ErrorsForTelegramBot(error error, where string) {
 	//errorr := &ErrorForTelegram{Error:error, Where:where}
 	//jsonForModel, err := json.Marshal(errorr)
 	//if err != nil {

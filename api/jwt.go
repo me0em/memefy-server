@@ -48,7 +48,7 @@ func GenerateToken(username string) string {
 
 // Authorization checks a token for validation
 // TODO: expired time
-func Authorization(_ http.ResponseWriter, r *http.Request) (string, float64, error) {
+func Authorization(w http.ResponseWriter, r *http.Request) (string, float64, error) {
 	// Parse token in request header
 	auth := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 
@@ -69,4 +69,17 @@ func Authorization(_ http.ResponseWriter, r *http.Request) (string, float64, err
 	expTime := claims["exp"].(float64)
 
 	return userID, expTime, nil
+}
+
+// TODO: дописать
+// CheckRefreshToken checks refresh token for valid
+func CheckRefreshToken(w http.ResponseWriter, r *http.Request) (string, error) {
+	userID, _, err := Authorization(w, r)
+	if err != nil {
+		return "", err
+	}
+	if userID[len(userID)-8:] != "-refresh" {
+		return "", errors.New("expected valid bearer token")
+	}
+	return userID, err
 }
