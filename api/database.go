@@ -20,7 +20,6 @@ var db *sql.DB
 //var CreateTableReaction = "CREATE TABLE reactions (meme_id  Int64, user_id String, meme_text String, " +
 //	"					timestamp DATE ) ENGINE = MergeTree(timestamp, (user_id),8192)"
 
-
 // InitDB initialize the database
 func InitDB(dataSourceName string) {
 	var err error
@@ -136,7 +135,8 @@ func DeleteUser(db *sql.DB, userID string) error {
 	return nil
 }
 
-func SaveReaction(db *sql.DB, reactions ReactionContext) error  {
+// SaveReaction save user reaction in database
+func SaveReaction(db *sql.DB, reactions ReactionContext) error {
 	stmt, err := db.Prepare("INSERT INTO memefy.reactions " +
 		"VALUES(?, ?, ?, ?)")
 	if err != nil {
@@ -150,6 +150,7 @@ func SaveReaction(db *sql.DB, reactions ReactionContext) error  {
 	return err
 }
 
+
 func GetMemeText(db *sql.DB, MemeID int) (string, string) {
 	//TODO: сделать запрос и хеш функцию, возвращать как text, hash
 	memes := &MemeWithText{}
@@ -160,3 +161,4 @@ func GetMemeText(db *sql.DB, MemeID int) (string, string) {
 	}
 	return memes.Text, memes.Hash
 }
+

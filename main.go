@@ -14,6 +14,7 @@ func runServer() {
 	http.HandleFunc("/api/user", api.CreateUser)
 	http.HandleFunc("/api/memes", api.SendMemes)
 	http.HandleFunc("/api/reaction", api.GetReaction)
+	http.HandleFunc("/api/refresh", api.RefreshToken)
 	http.HandleFunc("/api/test", api.TestThings)
 	log.Fatal(http.ListenAndServe(":8085", nil))
 }
