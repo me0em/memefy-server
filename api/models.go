@@ -43,10 +43,10 @@ func (user User) isValid() bool {
 
 // ReactionContext and me doesn't give a fuck why it's necessary
 type ReactionContext struct {
-	UserID   string `json:"user_id"`
-	MemeID   int    `json:"meme_id"`
-	Reaction int    `json:"reaction"`
-	//Timestamp string	`json:"timestamp"`
+	UserID    string `json:"user_id"`
+	MemeID    int    `json:"meme_id"`
+	Reaction  int    `json:"reaction"`
+	Timestamp string `json:"timestamp"`
 }
 
 // MemesTransport is a struct for request to ML model
@@ -57,22 +57,18 @@ type MemesTransport struct {
 
 // ErrorForTelegram is a struct for storage errors sendings to error bot
 type ErrorForTelegram struct {
-
-	Error error		`json:"error"`
-	Where string	`json:"where"`
-
+	Error error  `json:"error"`
+	Where string `json:"where"`
 }
 type MemesFromModel struct {
-	UserID string	`json:"user_id"`
-	Memes []int		`json:"meme_id"`
+	UserID string `json:"user_id"`
+	Memes  []int  `json:"meme_id"`
 }
 type ResponseMemes struct {
-	Memes []string	`json:"meme_id"`
-	Text []string	`json:"meme_text"`
+	Memes []string `json:"meme_id"`
+	Text  []string `json:"meme_text"`
 }
 type MemeWithText struct {
 	Hash string
 	Text string
 }
-
-

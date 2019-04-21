@@ -9,6 +9,7 @@ import (
 	"memefy-server/config"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // CreateUser represents user registration and update user data
@@ -23,6 +24,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// get POST data
 	decoder := json.NewDecoder(r.Body)
 	userData := &User{}
+	userData.UserMetadata.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 	err := decoder.Decode(&userData)
 
 	if err != nil || !userData.isValid() {
@@ -169,8 +171,7 @@ func GetReaction(w http.ResponseWriter, r *http.Request) {
 
 	userID, _, err := Authorization(w, r)
 	content.UserID = userID
-	// TODO: закидывать время
-	//content.Timestamp = time.Now()
+	content.Timestamp = time.Now().Format("2006-01-02 15:04:05")
 	err = SaveReaction(db, content)
 	if err != nil {
 		ErrorsForTelegramBot(err, "<GetReaction>: Can not save reaction into database")
