@@ -60,3 +60,15 @@ type ErrorForTelegram struct {
 	Where string	`json:"where"`
 
 }
+type MemesFromModel struct {
+	UserID string	`json:"user_id"`
+	Memes []int		`json:"meme_id"`
+}
+type ResponseMemes struct {
+	Memes []string	`json:"meme_id"`
+	Text []string	`json:"meme_text"`
+}
+type MemeWithText struct {
+	Hash string
+	Text string
+}

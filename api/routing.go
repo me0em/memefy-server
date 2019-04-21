@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -87,16 +86,16 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: check authorization function, may be as decorator (everywhere)
 	// TODO: authorization vs authentification
-	userID, _, err := Authorization(w, r)
+	//userID, _, err := Authorization(w, r)
 	// TODO: usually http.response with custom error text if it possible,
 	// if it not - just send http.response (everywhere)
-	if err != nil {
-		ErrorsForTelegramBot(err, "SendMemes")
-		http.Error(w, "authorization failed", http.StatusUnauthorized)
-		return
-	}
+	//if err != nil {
+	//	ErrorsForTelegramBot(err, "SendMemes")
+	//	http.Error(w, "authorization failed", http.StatusUnauthorized)
+	//	return
+	//}
 
-	// parse number of memes which will be returned
+	// parse number of memes which will be retur	ned
 	limit := r.URL.Query().Get("limit")
 	amount, err := strconv.Atoi(limit)
 	if err != nil || amount < 1 || amount > 10 {
@@ -108,7 +107,7 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	// TODO: send error to Telegram Bot
 	// TODO: model response with error msg, need to handle it:
 	// {"error_msg": "Username not converted to user_id", "user_id": "3"}
-	transportStorage := &MemesTransport{UserID: userID, Amount: amount}
+	transportStorage := &MemesTransport{UserID: "tyztot@gmail.com", Amount: amount}
 	jsonForModel, err := json.Marshal(transportStorage)
 	if err != nil {
 		ErrorsForTelegramBot(err, "SendMemes")
@@ -116,37 +115,39 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonForModelBit := bytes.NewReader(jsonForModel)
 	// TODO: config package with urls etc
-	resp, err := http.Post("http://localhost:8228/model", "application/json", jsonForModelBit) //отправляю в модель
+	resp, err := http.Post("http://localhost:8228/hero", "application/json", jsonForModelBit) //отправляю в модель
 	if err != nil {
 		ErrorsForTelegramBot(err, "SendMemes")
 		fmt.Println(err)
 	}
-
-	memes, err := ioutil.ReadAll(resp.Body) //обрабатываю полученные даныне, получаю что нужно
+	decoder := json.NewDecoder(resp.Body)
+	memes := &MemesFromModel{}
+	err = decoder.Decode(&memes)
+	if err != nil || len(memes.Memes) < amount {
+		//TODO: что делать если модель прислала меньше мемов чем запрошено?
+		ErrorsForTelegramBot(err, "SendMemes")
+		fmt.Println(err)
+	}
+	var arrtext = make([]string, 0, amount)
+	var arrhash = make([]string, 0, amount)
+	for i := 0; i <  len(memes.Memes); i++{
+		var text, hash string = GetMemeText(db, memes.Memes[i])
+		arrtext =  append(arrtext, text)
+		arrhash = append(arrhash, hash)
+	}
+	memesForUser := &ResponseMemes{}
+	memesForUser.Memes = arrhash
+	memesForUser.Text = arrtext
+	jsonForUser, err := json.Marshal(memesForUser)
 	if err != nil {
 		ErrorsForTelegramBot(err, "SendMemes")
 		fmt.Println(err)
 	}
-
 	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(memes); err != nil {
+	if _, err = w.Write(jsonForUser); err != nil {
 		ErrorsForTelegramBot(err, "SendMemes")
 		panic(err)
 	}
-
-	// respPayload := make(map[string]string)
-	// respPayload["limit"] = strconv.Itoa(limit)
-	// response, err := json.Marshal(respPayload)
-	// if err != nil {
-	// 	http.Error(w, "something went wrong on the our side", http.StatusInternalServerError)
-	// }
-
-	//w.WriteHeader(http.StatusOK)
-	//if wtf, err := w.Write(response); err != nil {
-	//	// TODO: logging
-	//	fmt.Printf("%v", wtf)
-	//	panic(err)
-	//}
 }
 
 // TODO: sql-query to save reaction in databasedatabase
