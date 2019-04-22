@@ -1,14 +1,5 @@
-FROM golang:1.8
+FROM frolvlad/alpine-glibc
 
-WORKDIR ./
-COPY ./memefy-server ./
-RUN go get github.com/mailru/go-clickhouse
-RUN go get github.com/dgrijalva/jwt-go
-RUN go build main.go
+COPY ./main ./
 
 ENTRYPOINT ./main
-#COPY ./main ./
-#
-#EXPOSE 8085
-#
-#ENTRYPOINT ./main
