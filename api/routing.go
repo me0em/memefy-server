@@ -92,26 +92,23 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// parse number of memes which will be retur	ned
+	// parse number of memes which will be returned
 	limit := r.URL.Query().Get("limit")
 	amount, err := strconv.Atoi(limit)
-	if err != nil || amount < 1 || amount > 10 {
+	if err != nil || amount < 1 || amount > 30 {
 		ErrorsForTelegramBot(err, "<SendMemes>: Invalid limit number")
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
 
-	// TODO: send error to Telegram Bot
 	// TODO: model response with error msg, need to handle it:
-	// {"error_msg": "Username not converted to user_id", "user_id": "3"}
 	transportStorage := &MemesTransport{UserID: userID, Amount: amount}
 	jsonForModel, err := json.Marshal(transportStorage)
 	if err != nil {
 		fmt.Println(err)
 	}
 	jsonForModelBit := bytes.NewReader(jsonForModel)
-	// TODO: config package with urls etc
-	resp, err := http.Post(config.MLModelHost+"/hero", "application/json", jsonForModelBit) //отправляю в модель
+	resp, err := http.Post(config.MLModelHost, "application/json", jsonForModelBit) //отправляю в модель
 	if err != nil {
 		ErrorsForTelegramBot(err, "<SendMemes>: Error while sending data to ML model")
 		fmt.Println(err)
@@ -136,10 +133,6 @@ func SendMemes(w http.ResponseWriter, r *http.Request) {
 	memesForUser.Memes = arrhash
 	memesForUser.Text = arrtext
 	jsonForUser, err := json.Marshal(memesForUser)
-	//=======
-	//
-	//	memes, err := ioutil.ReadAll(resp.Body) // do response data, get what we want to
-	//>>>>>>> 5eabfd51c43ebaf76efaf4896248948aa180c65a
 	if err != nil {
 		ErrorsForTelegramBot(err, "<SendMemes>: Error while reciving data from ML model")
 		fmt.Println(err)
@@ -164,7 +157,7 @@ func GetReaction(w http.ResponseWriter, r *http.Request) {
 	var content ReactionContext
 	err := decoder.Decode(&content)
 	if err != nil {
-		ErrorsForTelegramBot(err, "<GetReaction>: Invalid reaction data")
+		ErrorsForTelegramBot(err, "<GetReaction>: Invalid reaction dat	a")
 		http.Error(w, "another payload was expected", http.StatusBadRequest)
 		return
 	}
@@ -227,7 +220,6 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 	respPayload := make(map[string]string)
 	respPayload["userID"] = userID
 	respPayload["Expired_time"] = fmt.Sprint(expiredTime)
-
 	response, _ := json.Marshal(respPayload)
 	w.WriteHeader(http.StatusOK)
 	if wtf, err := w.Write(response); err != nil {
@@ -239,7 +231,6 @@ func TestThings(w http.ResponseWriter, r *http.Request) {
 }
 
 // ErrorsForTelegramBot sends error msg to Error Telegram Bot
-// ErrorsForTelegramBot sends error msg to Error Telegram Bot
 func ErrorsForTelegramBot(error error, where string) {
 
 	errorr := &ErrorForTelegram{Error: error, Where: where}
@@ -248,10 +239,9 @@ func ErrorsForTelegramBot(error error, where string) {
 		fmt.Println(err)
 	}
 	jsonForModelBit := bytes.NewReader(jsonForModel)
-	re, err := http.Post(config.MLModelHost, "application/json", jsonForModelBit) //отправляю в модель
+	re, err := http.Post(config.ErrorHost, "application/json", jsonForModelBit) //отправляю в модель
 	fmt.Println(re)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(error, where)
 }

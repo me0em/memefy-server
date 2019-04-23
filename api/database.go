@@ -40,7 +40,7 @@ func GetAllUsers(db *sql.DB) ([]User, error) {
 	user := User{}
 	users := []User{}
 
-	rows, err := db.Query("SELECT * FROM user")
+	rows, err := db.Query("SELECT * FROM memefy.user")
 	if err != nil {
 		err = errors.New("failed to make a DB query")
 		return nil, err
@@ -68,7 +68,7 @@ func GetAllUsers(db *sql.DB) ([]User, error) {
 // GetUserByID returns user if he exists
 func GetUserByID(db *sql.DB, userID string) (User, error) {
 	user := User{}
-	err := db.QueryRow("SELECT * FROM user WHERE user_id = ?", userID).
+	err := db.QueryRow("SELECT * FROM memefy.user WHERE user_id = ?", userID).
 		Scan(&user.UserID, &user.IDType, &user.UserMetadata.Timestamp, &user.UserMetadata.Device, &user.UserMetadata.Model, &user.UserMetadata.DeviceLang, &user.UserMetadata.IPv4)
 	if err != nil {
 		//err = errors.New("failed to make a DB query")
@@ -80,8 +80,8 @@ func GetUserByID(db *sql.DB, userID string) (User, error) {
 
 // InsertUser register a user in the database
 func InsertUser(db *sql.DB, user User) error {
-	stmt, err := db.Prepare("INSERT INTO memefy.user " +
-		"VALUES(?, ?, ?, ?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO memefy.user (user_id,  id_type,  timestamp,  device,  model,  device_language,  IPv4) " +
+		"VALUES (?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -138,12 +138,12 @@ func DeleteUser(db *sql.DB, userID string) error {
 
 // SaveReaction save user reaction in database
 func SaveReaction(db *sql.DB, reactions ReactionContext) error {
-	stmt, err := db.Prepare("INSERT INTO memefy.reactions " +
+	stmt, err := db.Prepare("INSERT INTO memefy.reactions (user_id, meme_id, reaction, timestamp)" +
 		"VALUES(?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = stmt.Exec(reactions)
+	_, err = stmt.Exec(reactions.UserID, reactions.MemeID, reactions.Reaction, reactions.Timestamp)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -153,7 +153,6 @@ func SaveReaction(db *sql.DB, reactions ReactionContext) error {
 
 // GetMemeText is  a function for getting meme text
 func GetMemeText(db *sql.DB, MemeID int) (string, string) {
-	//TODO: сделать запрос и хеш функцию, возвращать как text, hash
 	memes := &MemeWithText{}
 	err := db.QueryRow("SELECT meme_text, meme_hash FROM memefy.memes WHERE meme_id = ?", MemeID).Scan(&memes.Text, &memes.Hash)
 	if err != nil {
